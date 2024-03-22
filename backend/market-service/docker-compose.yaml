@@ -1,0 +1,81 @@
+version: '3'
+services:
+
+  mysql:
+    image: mysql:8.0
+    networks:
+      - market_network
+    volumes:
+      - ./db/conf.d:/etc/mysql/conf.d
+      - ./db/data:/var/lib/mysql
+      - ./db/initdb.d:/docker-entrypoint-initdb.d
+    env_file: .env
+    ports:
+      - "3306:3306"
+    environment:
+      - TZ=Asia/Seoul
+      - MYSQL_ROOT_PASSWORD=
+      - MYSQL_USER=mysqluser
+      - MYSQL_PASSWORD=
+
+  market-service:
+    image: market-service:1.0.0
+    networks:
+      - market_network
+    ports:
+      - "8081:8080"
+    depends_on:
+      - mysql
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/market-service?useSSL=false&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=mysqluser
+      - SPRING_DATASOURCE_PASSWORD=mysqlpw
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_CLOUD_VAULT_TOKEN=sd
+      - SPRING_CLOUD_VAULT_SCHEME=http
+      - SPRING_CLOUD_VAULT_HOST=vault
+      - SPRING_CLOUD_VAULT_PORT=8200
+      - SPRING_CACHE_TYPE=redis
+      - SPRING_DATA_REDIS_HOST=
+      - SPRING_DATA_REDIS_PASSWORD=
+      - SPRING_DATA_REDIS_PORT=
+      - SPRING_DATA_REDIS_REPOSITORIES_ENABLED=false
+      - EXPIRE_DEFAULTTIME=18000
+
+#  vault:
+#    image: vault:1.13.1
+#    networks:
+#      - market_network
+#    ports:
+#      - "8200:8200"
+#    restart: always
+#    cap_add:
+#      - IPC_LOCK
+#
+#  prometheus:
+#    image: prom/prometheus
+#    networks:
+#      - market_network
+#    volumes:
+#      - ./prometheus/volume:/prometheus
+#      - ./prometheus/config:/etc/prometheus
+#    ports:
+#      - 9090:9090
+#    command:
+#      - '--config.file=/etc/prometheus/prometheus.yml'
+#    restart: always
+#
+#  grafana:
+#    image: grafana/grafana
+#    networks:
+#      - market_network
+#    volumes:
+#      - ./grafana/volume:/var/lib/grafana
+#    ports:
+#      - 3090:3090
+#    restart: always
+#    user: root
+
+networks:
+  market_network:
+    driver: bridge
