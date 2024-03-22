@@ -22,13 +22,13 @@ import org.springframework.web.client.RestTemplate;
 @RequiredArgsConstructor
 public class KakaoService {
 
-    @Value("${kakao.client.id}")
+    @Value("${KAKAO_CLIENT_ID}")
     private String KAKAO_CLIENT_ID;
 
-    @Value("${kakao.client.secret}")
+    @Value("${KAKAO_CLIENT_SECRET}")
     private String KAKAO_CLIENT_SECRET;
 
-    @Value("${kakao.redirect.url}")
+    @Value("${KAKAO_REDIRECT_URL}")
     private String KAKAO_REDIRECT_URL;
 
     private final static String KAKAO_AUTH_URI = "https://kauth.kakao.com";

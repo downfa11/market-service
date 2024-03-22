@@ -15,13 +15,13 @@ import org.springframework.web.client.RestTemplate;
 @Service
 public class NaverService {
 
-    @Value("${naver.client.id}")
+    @Value("${NAVER_CLIENT_ID}")
     private String NAVER_CLIENT_ID;
 
-    @Value("${naver.client.secret}")
+    @Value("${NAVER_CLIENT_SECRET}")
     private String NAVER_CLIENT_SECRET;
 
-    @Value("${naver.redirect.url}")
+    @Value("${NAVER_REDIRECT_URL}")
     private String NAVER_REDIRECT_URL;
 
     private final static String NAVER_AUTH_URI = "https://nid.naver.com";
