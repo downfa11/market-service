@@ -70,8 +70,9 @@ public class BoardService {
             }
 
             List<BoardResponse> boardResponses = new ArrayList<>();
-            for (Board board : boards)
-                boardResponses.add(toBoardResponse(board));
+            boards.stream()
+                .map(this::toBoardResponse)
+                .forEach(boardResponses::add);
 
 
             return boardResponses;
@@ -92,8 +93,9 @@ public class BoardService {
                 }
 
                 List<BoardResponse> boardResponses = new ArrayList<>();
-                for (Board board : boards)
-                    boardResponses.add(toBoardResponse(board));
+                boards.stream()
+                        .map(this::toBoardResponse)
+                        .forEach(boardResponses::add);
 
 
                 return boardResponses;

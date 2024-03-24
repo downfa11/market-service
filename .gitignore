@@ -286,3 +286,16 @@ prometheus/volume/data/wal/00000052
 prometheus/volume/data/wal/checkpoint.00000049/00000000
 grafana/volume/alerting/1/__default__.tmpl
 grafana/volume/grafana.db
+db/data/binlog.000029
+db/data/ibtmp1
+db/data/binlog.000030
+db/data/\#innodb_temp/temp_9.ibt
+db/data/\#innodb_temp/temp_8.ibt
+db/data/\#innodb_temp/temp_7.ibt
+db/data/\#innodb_temp/temp_6.ibt
+db/data/\#innodb_temp/temp_5.ibt
+db/data/\#innodb_temp/temp_4.ibt
+db/data/\#innodb_temp/temp_3.ibt
+db/data/\#innodb_temp/temp_2.ibt
+db/data/\#innodb_temp/temp_10.ibt
+db/data/\#innodb_temp/temp_1.ibt

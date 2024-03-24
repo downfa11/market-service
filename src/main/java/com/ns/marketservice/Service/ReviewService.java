@@ -26,6 +26,16 @@ public class ReviewService {
     private final UserRepository userRepository;
     private final BoardRepository boardRepository;
 
+    private ReviewResponse toReviewResponse(Review review){
+        ReviewResponse reviewResponse = new ReviewResponse();
+        reviewResponse.setId(review.getId());
+        reviewResponse.setBoardId(review.getBoard().getBoardId());
+        reviewResponse.setBody(review.getBody());
+        reviewResponse.setNickname(review.getMembership().getNickname());
+        reviewResponse.setCreatedAt(review.getCreatedAt());
+        reviewResponse.setUpdatedAt(review.getUpdatedAt());
+        return reviewResponse;
+    }
 
     public List<ReviewResponse> getReviews(Long boardId){
 
@@ -34,16 +44,9 @@ public class ReviewService {
                 List<Review> Reviews =ReviewRepository.findAllByBoard_BoardId(boardId).orElse(null);
 
                 List<ReviewResponse> ReviewResponsees = new ArrayList<>();
-                for (Review review : Reviews) {
-                    ReviewResponse ReviewResponse = new ReviewResponse();
-                    ReviewResponse.setBoardId(review.getBoard().getBoardId());
-                    ReviewResponse.setBody(review.getBody());
-                    ReviewResponse.setNickname(review.getMembership().getNickname());
-                    ReviewResponse.setId(review.getId());
-                    ReviewResponse.setCreatedAt(review.getCreatedAt());
-                    ReviewResponse.setUpdatedAt(review.getUpdatedAt());
-                    ReviewResponsees.add(ReviewResponse);
-                }
+                Reviews.stream()
+                        .map(this::toReviewResponse)
+                        .forEach(ReviewResponsees::add);
 
                 return ReviewResponsees;
             } else {
@@ -66,16 +69,9 @@ public class ReviewService {
 
 
                 List<ReviewResponse> ReviewResponsees = new ArrayList<>();
-                for (Review review : myReviews) {
-                    ReviewResponse ReviewResponse = new ReviewResponse();
-                    ReviewResponse.setBoardId(review.getBoard().getBoardId());
-                    ReviewResponse.setBody(review.getBody());
-                    ReviewResponse.setNickname(review.getMembership().getNickname());
-                    ReviewResponse.setId(review.getId());
-                    ReviewResponse.setCreatedAt(review.getCreatedAt());
-                    ReviewResponse.setUpdatedAt(review.getUpdatedAt());
-                    ReviewResponsees.add(ReviewResponse);
-                }
+                myReviews.stream()
+                        .map(this::toReviewResponse)
+                        .forEach(ReviewResponsees::add);
 
                 return ReviewResponsees;
 
@@ -108,15 +104,8 @@ public class ReviewService {
             review.setUpdatedAt(new Timestamp(System.currentTimeMillis()));
             ReviewRepository.save(review);
 
-            ReviewResponse ReviewResponse = new ReviewResponse();
-            ReviewResponse.setId(review.getId());
-            ReviewResponse.setBoardId(board.getBoardId());
-            ReviewResponse.setBody(review.getBody());
-            ReviewResponse.setNickname(review.getMembership().getNickname());
-            ReviewResponse.setCreatedAt(review.getCreatedAt());
-            ReviewResponse.setUpdatedAt(review.getUpdatedAt());
 
-            return ReviewResponse;
+            return toReviewResponse(review);
         } else {
             throw new RuntimeException("Membership not exist.");
         }
@@ -132,14 +121,8 @@ public class ReviewService {
                     review.setUpdatedAt(new Timestamp(System.currentTimeMillis()));
                     ReviewRepository.save(review);
 
-                    ReviewResponse ReviewResponse = new ReviewResponse();
-                    ReviewResponse.setId(review.getId());
-                    ReviewResponse.setBoardId(review.getBoard().getBoardId());
-                    ReviewResponse.setBody(review.getBody());
-                    ReviewResponse.setNickname(review.getMembership().getNickname());
-                    ReviewResponse.setCreatedAt(review.getCreatedAt());
-                    ReviewResponse.setUpdatedAt(review.getUpdatedAt());
-                    return ReviewResponse;
+
+                    return toReviewResponse(review);
                 } else {
                     throw new RuntimeException("Invalid Membership Token.");
                 }
