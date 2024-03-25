@@ -2,11 +2,17 @@ package com.ns.marketservice.Repository;
 
 
 import com.ns.marketservice.Domain.Board;
+import com.ns.marketservice.Domain.Category;
 import com.ns.marketservice.Domain.DTO.BoardFilter;
+import com.ns.marketservice.Domain.DTO.BoardResponse;
 import com.ns.marketservice.Domain.QBoard;
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.Projections;
+import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.util.StringUtils;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -20,14 +26,16 @@ import java.util.List;
 public class BoardCustomRepositoryImpl extends QuerydslRepositorySupport implements BoardCustomRepository{
 
     private final JPAQueryFactory jpaQueryFactory;
+    private final QBoard qBoard;
 
     public BoardCustomRepositoryImpl(JPAQueryFactory jpaQueryFactory) {
         super(Board.class);
         this.jpaQueryFactory = jpaQueryFactory;
+        this.qBoard=QBoard.board;
     }
     @Override
     public Page<Board> findByNickname(String nickName, Long lastBoardId, BoardFilter filter,Pageable pageable) {
-        QBoard qBoard = QBoard.board;
+
         BooleanBuilder builder = filterBoard(qBoard,filter);
         builder.and(qBoard.membership.nickname.contains(nickName))
                 .and(qBoard.boardId.goe(lastBoardId));
@@ -48,7 +56,6 @@ public class BoardCustomRepositoryImpl extends QuerydslRepositorySupport impleme
 
     @Override
     public Page<Board> findBoardByCategory(String categoryName, Long lastBoardId,BoardFilter filter, Pageable pageable) {
-        QBoard qBoard = QBoard.board;
         BooleanBuilder builder = filterBoard(qBoard,filter);
         builder.and(qBoard.category.categoryName.eq(categoryName))
                 .and(qBoard.boardId.goe(lastBoardId));
@@ -69,7 +76,6 @@ public class BoardCustomRepositoryImpl extends QuerydslRepositorySupport impleme
 
     @Override
     public Page<Board> findByTitle(String title, Long lastBoardId,BoardFilter filter, Pageable pageable) {
-        QBoard qBoard = QBoard.board;
         BooleanBuilder builder = filterBoard(qBoard,filter);
         builder.and(qBoard.title.contains(title))
                 .and(qBoard.boardId.goe(lastBoardId));
@@ -90,7 +96,6 @@ public class BoardCustomRepositoryImpl extends QuerydslRepositorySupport impleme
 
     @Override
     public Page<Board> findByContents(String keyword, Long lastBoardId, BoardFilter filter, Pageable pageable) {
-        QBoard qBoard = QBoard.board;
         BooleanBuilder builder = filterBoard(qBoard,filter);
         builder.and(qBoard.contents.contains(keyword))
                 .and(qBoard.boardId.goe(lastBoardId));
@@ -110,23 +115,23 @@ public class BoardCustomRepositoryImpl extends QuerydslRepositorySupport impleme
     }
 
     @Override
-    public Page<Board> findBoardAll(Long lastBoardId, BoardFilter filter, Pageable pageable){
-        QBoard qBoard = QBoard.board;
-        BooleanBuilder builder = filterBoard(qBoard,filter);
-        builder.and(qBoard.boardId.goe(lastBoardId));
+    public List<Board> findBoardAll(Long lastBoardId,Long offset, BoardFilter filter){
 
-        JPAQuery<Board> query = new JPAQuery<>(getEntityManager());
-        query.from(qBoard)
+        List<Category> categories = filter.getCategories();
+        List<String> regions = filter.getRegions();
+        List<Board.SortStatus> sortStatuses = filter.getSortStatus();
+
+        return jpaQueryFactory.selectFrom(qBoard)
                 .leftJoin(qBoard.membership).fetchJoin()
-                .leftJoin(qBoard.category).fetchJoin()
-                .leftJoin(qBoard.review).fetchJoin()
-                        .where(builder)
+                .leftJoin(qBoard.category).fetchJoin() //Todo
+                .where(inSortStatus(sortStatuses)
+                        ,inCategory(categories)
+                        ,inRegion(regions)
+                        ,qBoard.boardId.goe(lastBoardId))
                 .orderBy(qBoard.createdAt.desc())
-                        .offset(pageable.getOffset())
-                        .limit(pageable.getPageSize())
-                        .fetch();
+                        .offset(offset)
+                        .limit(10).fetch();
 
-        return getPage(query, pageable);
     }
 
     private BooleanBuilder filterBoard(QBoard qBoard,BoardFilter filter){
@@ -151,5 +156,35 @@ public class BoardCustomRepositoryImpl extends QuerydslRepositorySupport impleme
         long totalCount = query.fetchCount();
         List<Board> content = getQuerydsl().applyPagination(pageable, query).fetch();
         return new PageImpl<>(content, pageable, totalCount);
+    }
+
+    private BooleanExpression inSortStatus(List<Board.SortStatus> sortStatuses){
+        if(sortStatuses.isEmpty())
+            return null;
+
+        return qBoard.sortStatus.in(sortStatuses);
+    }
+
+    private BooleanExpression inCategory(List<Category> category){
+        if(category.isEmpty())
+            return null;
+
+        return qBoard.category.in(category);
+    }
+
+    private BooleanExpression inRegion(List<String> region){
+        if(region.isEmpty())
+            return null;
+
+        return qBoard.region.in(region);
+    }
+
+    public Boolean exist(Long boardId) {
+        Integer fetchOne = jpaQueryFactory
+                .selectOne()
+                .from(qBoard)
+                .where(qBoard.boardId.eq(boardId))
+                .fetchFirst();
+        return fetchOne !=null;
     }
 }
