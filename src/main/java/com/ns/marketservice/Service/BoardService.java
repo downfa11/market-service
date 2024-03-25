@@ -123,11 +123,10 @@ public class BoardService {
     }
 
     @Async
-    @Cacheable(value="getPosts",key="'getPosts'+':'+ #lastboardId")
-    public List<BoardResponse> getBoardsAll(Long lastboardId,BoardFilter filter) {
-        int pageSize = 10;
+    @Cacheable(value="getPosts",key="'getPosts'+':'+ #offset")
+    public List<BoardResponse> getBoardsAll(Long offset,BoardFilter filter) {
 
-        Page<Board> boards = fetchPagesAll(lastboardId,pageSize,filter);
+        List<Board> boards = boardRepository.findBoardAll(offset*10,filter);
 
         if (boards.isEmpty())
             throw new RuntimeException("category or board is not exist.");
@@ -141,17 +140,12 @@ public class BoardService {
 
     }
 
-    private Page<Board> fetchPagesAll(Long lastboardId,int size,BoardFilter filter){
-        PageRequest pageRequest = PageRequest.of(0,size,Sort.by("createdAt").descending());
-        return boardRepository.findBoardAll(lastboardId,filter,pageRequest);
-    }
 
     @Async
-    @Cacheable(value="getPosts",key="'getPosts'+ #categoryName +':'+ #lastboardId")
-    public List<BoardResponse> getBoardByCategory(String categoryName,Long lastboardId,BoardFilter filter) { // 게시글 등록순으로 카테고리별로
-            int pageSize = 10;
+    @Cacheable(value="getPosts",key="'getPosts'+ #offset +':'+ #lastboardId")
+    public List<BoardResponse> getBoardByCategory(String categoryName,Long offset,BoardFilter filter) {
 
-            Page<Board> boards = fetchPages(categoryName,lastboardId,pageSize,filter);
+            List<Board> boards = boardRepository.findBoardByCategory(categoryName,offset*10,filter);
 
             if (boards.isEmpty())
                 throw new RuntimeException("category or board is not exist.");
@@ -165,20 +159,13 @@ public class BoardService {
 
     }
 
-    private Page<Board> fetchPages(String categoryName,Long lastboardId,int size,BoardFilter filter){
-        PageRequest pageRequest = PageRequest.of(0,size,Sort.by("createdAt").descending());
-        return boardRepository.findBoardByCategory(categoryName,lastboardId,filter,pageRequest);
-    }
-
     @Async
-    @Cacheable(value="getPosts",key="'getPosts'+ ':'+'writer'+':'+#writer")
-    public List<BoardResponse> searchBoardByUserNickname(String writer,Long lastboardId,BoardFilter filter) {
-        int pageSize = 10;
-        Page<Board> boards = fetchPagesByUserNickname(writer,lastboardId,pageSize,filter);
+    @Cacheable(value="getPosts",key="'getPosts'+ ':'+'writer'+':'+#writer+':'+#offset")
+    public List<BoardResponse> searchBoardByUserNickname(String writer,Long offset,BoardFilter filter) {
+        List<Board> boards = boardRepository.findByNickname(writer,offset*10,filter);
 
             if (boards.isEmpty())
                 throw new RuntimeException("board not exist.");
-
 
             List<BoardResponse> boardResponses = new ArrayList<>();
             boards.stream()
@@ -188,17 +175,11 @@ public class BoardService {
 
             return boardResponses;
     }
-    private Page<Board> fetchPagesByUserNickname(String writer,Long lastboardId,int size,BoardFilter filter){
-        PageRequest pageRequest = PageRequest.of(0,size, Sort.by("createdAt").descending());
-        return boardRepository.findByNickname(writer,lastboardId,filter,pageRequest);
-    }
 
     @Async
-    @Cacheable(value="getPosts",key="'getPosts'+':'+'keyword'+':'+#keyword")
-    public List<BoardResponse> searchBoardByContent(String keyword,Long lastboardId,BoardFilter filter) {
-        int pageSize = 10;
-        Page<Board> boards = fetchPagesByContent(keyword,lastboardId,pageSize,filter);
-
+    @Cacheable(value="getPosts",key="'getPosts'+':'+'keyword'+':'+#keyword+':'+#offset")
+    public List<BoardResponse> searchBoardByContent(String keyword,Long offset,BoardFilter filter) {
+        List<Board> boards = boardRepository.findByContents(keyword,offset*10,filter);
             if (boards.isEmpty())
                 throw new RuntimeException("board not exist.");
 
@@ -211,17 +192,11 @@ public class BoardService {
 
 
     }
-    private Page<Board> fetchPagesByContent(String keyword,Long lastboardId,int size,BoardFilter filter){
-        PageRequest pageRequest = PageRequest.of(0,size,Sort.by("createdAt").descending());
-        return boardRepository.findByContents(keyword,lastboardId,filter,pageRequest);
-    }
 
     @Async
-    @Cacheable(value="getPosts",key="'getPosts'+ ':'+'title'+':'+#title")
-    public List<BoardResponse> searchBoardByTitle(String title, Long lastboardId, BoardFilter filter) {
-        int pageSize = 10;
-        Page<Board> boards = fetchPagesByTitle(title,lastboardId,pageSize,filter);
-
+    @Cacheable(value="getPosts",key="'getPosts'+ ':'+'title'+':'+#title+':'+#offset")
+    public List<BoardResponse> searchBoardByTitle(String title, Long offset, BoardFilter filter) {
+        List<Board> boards = boardRepository.findByTitle(title,offset*10,filter);
         if (boards.isEmpty())
             throw new RuntimeException("board not exist.");
 
@@ -232,11 +207,6 @@ public class BoardService {
                 .forEach(boardResponses::add);
 
         return boardResponses;
-    }
-    private Page<Board> fetchPagesByTitle(String title,Long lastboardId,int size,BoardFilter filter){
-
-        PageRequest pageRequest = PageRequest.of(0,size, Sort.by("createdAt").descending());
-        return boardRepository.findByTitle(title,lastboardId,filter,pageRequest);
     }
 
     @CacheEvict(value="getPosts", allEntries = true)

@@ -148,17 +148,17 @@ public class BoardController {
         return ResponseEntity.ok()
                 .body(new messageEntity("Success",dayboard));
     }
-    @GetMapping("/list/{CategoryName}/{lastboardId}")
-    public ResponseEntity<messageEntity> getBoardsByCategory(@PathVariable String CategoryName, @PathVariable Long lastboardId, @RequestBody BoardFilter filter) {
+    @GetMapping("/list/{CategoryName}/{offset}")
+    public ResponseEntity<messageEntity> getBoardsByCategory(@PathVariable String CategoryName, @PathVariable Long offset, @RequestBody BoardFilter filter) {
         return ResponseEntity.ok()
-                .body(new messageEntity("Success",boardService.getBoardByCategory(CategoryName,lastboardId,filter)));
+                .body(new messageEntity("Success",boardService.getBoardByCategory(CategoryName,offset,filter)));
     }
 
-    @GetMapping("/list/{lastboardId}")
-    public ResponseEntity<messageEntity> getBoardsAll(@PathVariable Long lastboardId, @RequestBody BoardFilter filter) {
+    @GetMapping("/list/{offset}")
+    public ResponseEntity<messageEntity> getBoardsAll(@PathVariable Long offset, @RequestBody BoardFilter filter) {
 
         return ResponseEntity.ok()
-                .body(new messageEntity("Success",boardService.getBoardsAll(lastboardId,filter)));
+                .body(new messageEntity("Success",boardService.getBoardsAll(offset,filter)));
     }
 
 
@@ -188,33 +188,33 @@ public class BoardController {
                 .body(new messageEntity("Success",boardService.getBoardByBoardId(boardId,idx)));
 
     }
-    @GetMapping("/search/user/{lastboardId}")
-    public ResponseEntity<messageEntity> getBoardByUserId (@RequestParam("nickname") String nickname, @PathVariable Long lastboardId, @RequestBody BoardFilter filter){
+    @GetMapping("/search/user/{offset}")
+    public ResponseEntity<messageEntity> getBoardByUserId (@RequestParam("nickname") String nickname, @PathVariable Long offset, @RequestBody BoardFilter filter){
         if (nickname == null)
             return ResponseEntity.ok().body(new messageEntity("Fail","Search Keyword 'nickname' is null."));
 
         return ResponseEntity.ok()
-                .body(new messageEntity("Success",boardService.searchBoardByUserNickname(nickname,lastboardId,filter)));
+                .body(new messageEntity("Success",boardService.searchBoardByUserNickname(nickname,offset,filter)));
 
     }
 
-    @GetMapping("/search/content/{lastboardId}")
-    public ResponseEntity<messageEntity> searchBoardByContent (@RequestParam("content") String content, @PathVariable Long lastboardId, @RequestBody BoardFilter filter){
+    @GetMapping("/search/content/{offset}")
+    public ResponseEntity<messageEntity> searchBoardByContent (@RequestParam("content") String content, @PathVariable Long offset, @RequestBody BoardFilter filter){
         if (content == null)
             return ResponseEntity.ok().body(new messageEntity("Fail","Search Keyword 'content' is null."));
 
         return ResponseEntity.ok()
-                .body(new messageEntity("Success",boardService.searchBoardByContent(content,lastboardId,filter)));
+                .body(new messageEntity("Success",boardService.searchBoardByContent(content,offset,filter)));
 
     }
 
-    @GetMapping("/search/title/{lastboardId}")
-    public ResponseEntity<messageEntity> searchBoardByTitle (@RequestParam("title") String title, @PathVariable Long lastboardId, @RequestBody BoardFilter filter){
+    @GetMapping("/search/title/{offset}")
+    public ResponseEntity<messageEntity> searchBoardByTitle (@RequestParam("title") String title, @PathVariable Long offset, @RequestBody BoardFilter filter){
          if (title == null)
             return ResponseEntity.ok().body(new messageEntity("Fail","Search Keyword 'title' is null."));
 
         return ResponseEntity.ok()
-                .body(new messageEntity("Success",boardService.searchBoardByTitle(title,lastboardId,filter)));
+                .body(new messageEntity("Success",boardService.searchBoardByTitle(title,offset,filter)));
 
 
     }

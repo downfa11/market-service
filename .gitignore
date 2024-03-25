@@ -299,3 +299,6 @@ db/data/\#innodb_temp/temp_3.ibt
 db/data/\#innodb_temp/temp_2.ibt
 db/data/\#innodb_temp/temp_10.ibt
 db/data/\#innodb_temp/temp_1.ibt
+db/data/binlog.000033
+db/data/binlog.000032
+db/data/binlog.000031

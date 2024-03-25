@@ -18,11 +18,11 @@ import java.util.Optional;
 public interface BoardCustomRepository {
 
 
-    Page<Board> findByNickname(String nickName, Long lastboardId, BoardFilter filter, Pageable pageable);
-    Page<Board> findBoardByCategory(String categoryName, Long lastboardId, BoardFilter filter, Pageable pageable);
+    List<Board> findByNickname(String nickName,Long offset,BoardFilter filter);
+    List<Board> findBoardByCategory(String categoryName, Long offset, BoardFilter filter);
 
-    Page<Board> findBoardAll(Long lastBoardId, BoardFilter filter, Pageable pageable);
-    Page<Board> findByTitle(String title, Long lastboardId, BoardFilter filter,Pageable pageable);
-    Page<Board> findByContents(String keyword, Long lastboardId,BoardFilter filter, Pageable pageable);
+    List<Board> findBoardAll(Long offset,BoardFilter filter);
+    List<Board> findByTitle(String title, Long offset, BoardFilter filter);
+    List<Board> findByContents(String keyword,  Long offset,BoardFilter filter);
 
 }
