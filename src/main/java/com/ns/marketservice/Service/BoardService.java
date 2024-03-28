@@ -126,8 +126,7 @@ public class BoardService {
     @Cacheable(value="getPosts",key="'getPosts'+':'+ #offset")
     public List<BoardResponse> getBoardsAll(Long offset,BoardFilter filter) {
 
-        List<Board> boards = boardRepository.findBoardAll(offset*10,filter);
-
+        List<Board> boards = boardRepository.findBoardAll(offset*10+1,filter);
         if (boards.isEmpty())
             throw new RuntimeException("category or board is not exist.");
 
@@ -137,7 +136,6 @@ public class BoardService {
                 .forEach(boardResponses::add);
 
         return boardResponses;
-
     }
 
 
@@ -145,7 +143,7 @@ public class BoardService {
     @Cacheable(value="getPosts",key="'getPosts'+ #offset +':'+ #lastboardId")
     public List<BoardResponse> getBoardByCategory(String categoryName,Long offset,BoardFilter filter) {
 
-            List<Board> boards = boardRepository.findBoardByCategory(categoryName,offset*10,filter);
+            List<Board> boards = boardRepository.findBoardByCategory(categoryName,offset*10+1,filter);
 
             if (boards.isEmpty())
                 throw new RuntimeException("category or board is not exist.");
@@ -162,7 +160,7 @@ public class BoardService {
     @Async
     @Cacheable(value="getPosts",key="'getPosts'+ ':'+'writer'+':'+#writer+':'+#offset")
     public List<BoardResponse> searchBoardByUserNickname(String writer,Long offset,BoardFilter filter) {
-        List<Board> boards = boardRepository.findByNickname(writer,offset*10,filter);
+        List<Board> boards = boardRepository.findByNickname(writer,offset*10+1,filter);
 
             if (boards.isEmpty())
                 throw new RuntimeException("board not exist.");
@@ -179,7 +177,7 @@ public class BoardService {
     @Async
     @Cacheable(value="getPosts",key="'getPosts'+':'+'keyword'+':'+#keyword+':'+#offset")
     public List<BoardResponse> searchBoardByContent(String keyword,Long offset,BoardFilter filter) {
-        List<Board> boards = boardRepository.findByContents(keyword,offset*10,filter);
+        List<Board> boards = boardRepository.findByContents(keyword,offset*10+1,filter);
             if (boards.isEmpty())
                 throw new RuntimeException("board not exist.");
 
@@ -196,7 +194,7 @@ public class BoardService {
     @Async
     @Cacheable(value="getPosts",key="'getPosts'+ ':'+'title'+':'+#title+':'+#offset")
     public List<BoardResponse> searchBoardByTitle(String title, Long offset, BoardFilter filter) {
-        List<Board> boards = boardRepository.findByTitle(title,offset*10,filter);
+        List<Board> boards = boardRepository.findByTitle(title,offset*10+1,filter);
         if (boards.isEmpty())
             throw new RuntimeException("board not exist.");
 

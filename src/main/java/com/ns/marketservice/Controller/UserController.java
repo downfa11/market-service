@@ -1,5 +1,7 @@
 package com.ns.marketservice.Controller;
 
+import com.ns.marketservice.Auth.kakao.KakaoDTO;
+import com.ns.marketservice.Auth.kakao.KakaoService;
 import com.ns.marketservice.Domain.DTO.*;
 import com.ns.marketservice.Domain.Membership;
 import com.ns.marketservice.Utils.jwtToken;
@@ -25,11 +27,19 @@ import java.util.Arrays;
 public class UserController {
 
     private final UserService userService;
-    RestTemplate restTemplate = new RestTemplate();
+    private final KakaoService kakaoService;
 
-    @PostMapping(path="/register")
-    public ResponseEntity<messageEntity> registerMembership(@RequestBody RegisterMembershipRequest request){
-        return ResponseEntity.ok().body(new messageEntity("Success",userService.RegisterMembership(request)));
+    @PostMapping(path="/oauth/register")
+    public ResponseEntity<messageEntity> registerMembership(HttpServletRequest httpRequest,@RequestBody RegisterMembershipRequest request) throws Exception {
+        KakaoDTO kakaoInfo = kakaoService.getKakaoInfo(httpRequest.getParameter("code"));
+        Long id = kakaoInfo.getId();
+        String nickname = kakaoInfo.getNickname();
+        String email = kakaoInfo.getEmail();
+        if(kakaoInfo!=null)
+            return ResponseEntity.ok().body(new messageEntity("Success",userService.RegisterMembership(id,email,nickname,request)));
+        else
+            return ResponseEntity.ok().body(new messageEntity("Fail","Incorrect OAuth2 autorization."));
+
     }
 
     @Transactional
