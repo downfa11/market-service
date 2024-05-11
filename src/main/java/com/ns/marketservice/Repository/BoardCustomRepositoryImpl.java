@@ -4,11 +4,14 @@ package com.ns.marketservice.Repository;
 import com.ns.marketservice.Domain.Board;
 import com.ns.marketservice.Domain.Category;
 import com.ns.marketservice.Domain.DTO.BoardFilter;
+import com.ns.marketservice.Domain.DTO.BoardList;
 import com.ns.marketservice.Domain.DTO.BoardResponse;
 import com.ns.marketservice.Domain.QBoard;
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.Expression;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.util.StringUtils;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -18,6 +21,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.support.QuerydslRepositorySupport;
+import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -34,14 +38,24 @@ public class BoardCustomRepositoryImpl implements BoardCustomRepository{
     }
 
     @Override
-    public List<Board> findByNickname(String nickName, Long offset,BoardFilter filter) {
+    public List<BoardList> findByNickname(String nickName, Long offset,BoardFilter filter) {
         List<Category> categories = filter.getCategories();
         List<String> regions = filter.getRegions();
         List<Board.SortStatus> sortStatuses = filter.getSortStatus();
 
-        return jpaQueryFactory.selectFrom(qBoard)
-                .leftJoin(qBoard.membership).fetchJoin()
-                .leftJoin(qBoard.category).fetchJoin()
+        return jpaQueryFactory.select(Projections.fields(BoardList.class,
+                        qBoard.boardId,
+                        qBoard.category.id,
+                        qBoard.sortStatus,
+                        qBoard.region,
+                       qBoard.membership.nickname.as("nickname"),
+                        qBoard.title,
+                        qBoard.hits,
+                        qBoard.createdAt
+                        ))
+                .from(qBoard)
+                .leftJoin(qBoard.membership)
+                .leftJoin(qBoard.category)
                 .where(inSortStatus(sortStatuses)
                         ,inCategory(categories)
                         ,inRegion(regions)
@@ -51,35 +65,27 @@ public class BoardCustomRepositoryImpl implements BoardCustomRepository{
                 .limit(10).fetch();
     }
 
+
     @Override
-    public List<Board> findBoardByCategory(String categoryName,Long offset,BoardFilter filter) {
+    public List<BoardList> findByTitle(String title,Long offset,BoardFilter filter) {
 
         List<Category> categories = filter.getCategories();
         List<String> regions = filter.getRegions();
         List<Board.SortStatus> sortStatuses = filter.getSortStatus();
 
-        return jpaQueryFactory.selectFrom(qBoard)
-                .leftJoin(qBoard.membership).fetchJoin()
-                .leftJoin(qBoard.category).fetchJoin()
-                .where(inSortStatus(sortStatuses)
-                        ,inCategory(categories)
-                        ,inRegion(regions)
-                        ,qBoard.category.categoryName.eq(categoryName))
-                .orderBy(qBoard.createdAt.desc())
-                .offset(offset)
-                .limit(10).fetch();
-    }
-
-    @Override
-    public List<Board> findByTitle(String title,Long offset,BoardFilter filter) {
-
-        List<Category> categories = filter.getCategories();
-        List<String> regions = filter.getRegions();
-        List<Board.SortStatus> sortStatuses = filter.getSortStatus();
-
-        return jpaQueryFactory.selectFrom(qBoard)
-                .leftJoin(qBoard.membership).fetchJoin()
-                .leftJoin(qBoard.category).fetchJoin()
+        return jpaQueryFactory.select(Projections.fields(BoardList.class,
+                        qBoard.boardId,
+                        qBoard.category.id,
+                        qBoard.sortStatus,
+                        qBoard.region,
+                        qBoard.membership.nickname.as("nickname"),
+                        qBoard.title,
+                        qBoard.hits,
+                        qBoard.createdAt
+                ))
+                .from(qBoard)
+                .leftJoin(qBoard.membership)
+                .leftJoin(qBoard.category)
                 .where(inSortStatus(sortStatuses)
                         ,inCategory(categories)
                         ,inRegion(regions)
@@ -90,15 +96,25 @@ public class BoardCustomRepositoryImpl implements BoardCustomRepository{
     }
 
     @Override
-    public List<Board> findByContents(String keyword, Long offset,BoardFilter filter) {
+    public List<BoardList> findByContents(String keyword, Long offset,BoardFilter filter) {
 
         List<Category> categories = filter.getCategories();
         List<String> regions = filter.getRegions();
         List<Board.SortStatus> sortStatuses = filter.getSortStatus();
 
-        return jpaQueryFactory.selectFrom(qBoard)
-                .leftJoin(qBoard.membership).fetchJoin()
-                .leftJoin(qBoard.category).fetchJoin()
+        return jpaQueryFactory.select(Projections.fields(BoardList.class,
+                        qBoard.boardId,
+                        qBoard.category.id,
+                        qBoard.sortStatus,
+                        qBoard.region,
+                        qBoard.membership.nickname.as("nickname"),
+                        qBoard.title,
+                        qBoard.hits,
+                        qBoard.createdAt
+                ))
+                .from(qBoard)
+                .leftJoin(qBoard.membership)
+                .leftJoin(qBoard.category)
                 .where(inSortStatus(sortStatuses)
                         ,inCategory(categories)
                         ,inRegion(regions)
@@ -109,19 +125,28 @@ public class BoardCustomRepositoryImpl implements BoardCustomRepository{
     }
 
     @Override
-    public List<Board> findBoardAll(Long offset, BoardFilter filter){
+    public List<BoardList> findBoardAll(Long offset, BoardFilter filter){
 
         List<Category> categories = filter.getCategories();
         List<String> regions = filter.getRegions();
         List<Board.SortStatus> sortStatuses = filter.getSortStatus();
 
-        return jpaQueryFactory.selectFrom(qBoard)
-                .leftJoin(qBoard.membership).fetchJoin()
-                .leftJoin(qBoard.category).fetchJoin()
+        return jpaQueryFactory.select(Projections.fields(BoardList.class,
+                        qBoard.boardId,
+                        qBoard.category.id,
+                        qBoard.sortStatus,
+                        qBoard.region,
+                        qBoard.membership.nickname.as("nickname"),
+                        qBoard.title,
+                        qBoard.hits,
+                        qBoard.createdAt
+                ))
+                .from(qBoard)
+                .leftJoin(qBoard.membership)
+                .leftJoin(qBoard.category)
                 .where(inSortStatus(sortStatuses)
                         ,inCategory(categories)
                         ,inRegion(regions))
-                        //,qBoard.boardId.goe(lastBoardId))
                 .orderBy(qBoard.createdAt.desc())
                         .offset(offset)
                         .limit(10).fetch();

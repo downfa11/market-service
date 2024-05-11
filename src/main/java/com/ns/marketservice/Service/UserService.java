@@ -34,7 +34,8 @@ public class UserService {
             return DecryptMyDataMembership(membership);
 
         } else {
-            throw new RuntimeException("Invalid LoginRequest");
+            // throw new RuntimeException("Invalid LoginRequest");
+            return null;
         }
     }
 
@@ -61,12 +62,12 @@ public class UserService {
         return Mydata;
     }
 
-    public RegisterMembershipResponse RegisterMembership(Long oauthId,String email,String nickname,RegisterMembershipRequest request){
+    public messageEntity RegisterMembership(Long oauthId,String email,String nickname,RegisterMembershipRequest request){
         if(repository.findByEmail(email).isPresent())
-            throw new RuntimeException("already exists email");
+            return new messageEntity("Fail","already exists email");
 
         if (repository.findByNickname(nickname).isPresent())
-            throw new RuntimeException("already exists nickname");
+            return new messageEntity("Fail","already exists nickname");
 
 
         try {
@@ -78,15 +79,15 @@ public class UserService {
 
             Membership membership = EncryptMembership(oauthId,name,nickname,address,email,request.getRegion(),request.isValid());
             Long userid = membership.getMembershipId();
-            return new RegisterMembershipResponse(userid,
+            return new messageEntity("Success",new RegisterMembershipResponse(userid,
                     membership.getName(),
                     membership.getNickname(),
                     membership.getEmail(),
                     membership.getAddress(),
-                    membership.getRegion());
+                    membership.getRegion()));
         }
         catch (Exception e){
-            throw new RuntimeException("registerMembership error: "+e);
+            return new messageEntity("Fail","registerMembership error: "+e);
         }
     }
 
@@ -120,7 +121,7 @@ public class UserService {
             }
 
         }  catch(Exception e){
-                throw new RuntimeException("deleteMembership error: "+e); }
+            return false; }
         return false;
     }
     public jwtToken LoginMembership(Long id) {
@@ -170,7 +171,6 @@ public class UserService {
 
             }
         }
-
         return null;
     }
     public jwtToken refreshJwtToken(RefreshTokenRequest request) {

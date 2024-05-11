@@ -4,6 +4,7 @@ package com.ns.marketservice.Service;
 import com.ns.marketservice.Domain.*;
 import com.ns.marketservice.Domain.DTO.ReviewRequest;
 import com.ns.marketservice.Domain.DTO.ReviewResponse;
+import com.ns.marketservice.Domain.DTO.messageEntity;
 import com.ns.marketservice.Repository.BoardRepository;
 import com.ns.marketservice.Repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -37,7 +38,7 @@ public class ReviewService {
         return reviewResponse;
     }
 
-    public List<ReviewResponse> getReviews(Long boardId){
+    public messageEntity getReviews(Long boardId){
 
             Optional<Board> findBoard = this.boardRepository.findByBoardId(boardId);
             if (findBoard.isPresent()) {
@@ -48,41 +49,37 @@ public class ReviewService {
                         .map(this::toReviewResponse)
                         .forEach(ReviewResponsees::add);
 
-                return ReviewResponsees;
+                return new messageEntity("Success", ReviewResponsees);
             } else {
-                throw new RuntimeException("Invalid boardId.");
+                return new messageEntity("Fail","Invalid boardId.");
             }
-
-
-
 
     }
 
-    public List<ReviewResponse> getMyReviewById(Long idx) {
+    public messageEntity getMyReviewById(Long idx) {
             Optional<Membership> MemberOptional = userRepository.findById(idx);
 
             if (MemberOptional.isPresent()) {
                 List<Review> myReviews = ReviewRepository.findAllByMembership_MembershipId(idx).orElse(null);
 
                 if (myReviews.isEmpty())
-                    throw new RuntimeException("MyReviews is Empty.");
-
+                    return new messageEntity("Fail","MyReviews is Empty.");
 
                 List<ReviewResponse> ReviewResponsees = new ArrayList<>();
                 myReviews.stream()
                         .map(this::toReviewResponse)
                         .forEach(ReviewResponsees::add);
 
-                return ReviewResponsees;
+                return new messageEntity("Success", ReviewResponsees);
 
             } else {
-                throw new RuntimeException("Membership not exist.");
+                return new messageEntity("Fail","Membership not exist.");
             }
 
     }
 
 
-    public ReviewResponse addReview(Long boardId, ReviewRequest req, Long idx) {
+    public messageEntity addReview(Long boardId, ReviewRequest req, Long idx) {
 
         Optional<Membership> optMembership = userRepository.findById(idx);
         Optional<Board> optBoard = boardRepository.findByBoardId(boardId);
@@ -91,7 +88,7 @@ public class ReviewService {
             Membership membership = optMembership.get();
 
             if (optBoard.isEmpty()) {
-                throw new RuntimeException("Board not exist.");
+                return new messageEntity("Fail","Board not exist.");
             }
 
             Board board = optBoard.get();
@@ -105,14 +102,14 @@ public class ReviewService {
             ReviewRepository.save(review);
 
 
-            return toReviewResponse(review);
+            return  new messageEntity("Success",toReviewResponse(review));
         } else {
-            throw new RuntimeException("Membership not exist.");
+            return new messageEntity("Fail","Membership not exist.");
         }
     }
 
         @Transactional
-        public ReviewResponse updateReview (Long reviewId, String newBody, Long idx){
+        public messageEntity updateReview (Long reviewId, String newBody, Long idx){
             Optional<Review> findReview = ReviewRepository.findById(reviewId);
             if (findReview.isPresent()) {
                 if (idx.equals(findReview.get().getMembership().getMembershipId())) {
@@ -121,17 +118,16 @@ public class ReviewService {
                     review.setUpdatedAt(new Timestamp(System.currentTimeMillis()));
                     ReviewRepository.save(review);
 
-
-                    return toReviewResponse(review);
+                    return new messageEntity("Success",toReviewResponse(review));
                 } else {
-                    throw new RuntimeException("Invalid Membership Token.");
+                    return new messageEntity("Fail","Invalid Membership Token.");
                 }
             } else {
-                throw new RuntimeException("Membership not exist.");
+                return new messageEntity("Fail","Membership not exist.");
             }
         }
 
-    public Long deleteReview(Long reviewId, Long idx) {
+    public messageEntity deleteReview(Long reviewId, Long idx) {
             Optional<Membership> findMembership = userRepository.findById(idx);
             Optional<Review> findReview = ReviewRepository.findById(reviewId);
 
@@ -139,21 +135,21 @@ public class ReviewService {
                 Membership Membership = findMembership.get();
 
                 if (findReview.isEmpty())
-                    throw new RuntimeException("Reviews not exist.");
+                    return new messageEntity("Fail","Reviews not exist.");
 
                 Membership writer = findReview.get().getMembership();
                 Board board = findReview.get().getBoard();
 
                 if (!Membership.equals(writer))
-                    throw new RuntimeException("Invalid Membership Token.");
+                    return new messageEntity("Fail","Invalid Membership Token.");
 
                 // 댓글 삭제 하면 board 의 ReviewCnt 값도 1씩 줄어야 함.
                 board.ReviewChange(board.getReviewCnt() - 1);
 
                 ReviewRepository.delete(findReview.get());
-                return board.getBoardId();
+                return new messageEntity("Success",board.getBoardId());
             } else {
-                throw new RuntimeException("Membership not exist.");
+                return new messageEntity("Fail","Membership not exist.");
             }
 
     }

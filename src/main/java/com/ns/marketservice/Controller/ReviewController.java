@@ -24,7 +24,7 @@ public class ReviewController {
             return ResponseEntity.ok().body(new messageEntity("Fail","boardId is null."));
 
         return ResponseEntity.ok()
-                .body(new messageEntity("Success",reviewService.getReviews(boardId)));
+                .body(reviewService.getReviews(boardId));
     }
 
     @GetMapping("/myreview")
@@ -37,7 +37,7 @@ public class ReviewController {
 
 
         return ResponseEntity.ok()
-                .body(new messageEntity("Success",reviewService.getMyReviewById(idx)));
+                .body(reviewService.getMyReviewById(idx));
     }
 
     @PostMapping("/add")
@@ -46,7 +46,7 @@ public class ReviewController {
             if (idx == 0 || req == null)
                 return ResponseEntity.ok().body(new messageEntity("Fail","Not Authorization or request is incorrect."));
 
-        return ResponseEntity.ok().body(new messageEntity("Success",reviewService.addReview(boardId, req, idx)));
+        return ResponseEntity.ok().body(reviewService.addReview(boardId, req, idx));
     }
 
     @PatchMapping("/update")
@@ -57,7 +57,7 @@ public class ReviewController {
                         .body(new messageEntity("Fail","Not Authorization or request is incorrect."));
 
         return ResponseEntity.ok()
-                .body(new messageEntity("Success",reviewService.updateReview(reviewId, request.getBody(), idx)));
+                .body(reviewService.updateReview(reviewId, request.getBody(), idx));
     }
 
     @DeleteMapping("/delete")
@@ -68,7 +68,7 @@ public class ReviewController {
                     .body(new messageEntity("Fail","Not Authorization or request is incorrect."));
 
         return ResponseEntity.ok()
-                .body(new messageEntity("Success",reviewService.deleteReview(reviewId, idx)));
+                .body(reviewService.deleteReview(reviewId, idx));
     }
 
 }
