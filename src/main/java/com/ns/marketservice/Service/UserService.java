@@ -224,4 +224,8 @@ public class UserService {
         return null;
     }
 
+    public Membership findByMembershipId(Long membershipId){
+        Optional<Membership> membershipOptional = repository.findById(membershipId);
+        return membershipOptional.get();
+    }
 }
