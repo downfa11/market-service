@@ -31,8 +31,9 @@ public class BoardController {
     private final JwtTokenProvider jwtTokenProvider;
 
     @PostMapping("/add")
-    public ResponseEntity<messageEntity> add(@RequestPart postRequest request,
+    public ResponseEntity<messageEntity> add(@RequestPart(value = "request") postRequest request,
                                              @RequestPart(value = "images", required = false) List<MultipartFile> images) {
+
         Long idx = jwtTokenProvider.getMembershipIdbyToken();
         if (idx == 0)
             return ResponseEntity.ok().body(new messageEntity("Fail","Not Authorization or boardId is incorrect."));
