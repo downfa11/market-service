@@ -1,5 +1,6 @@
 package com.ns.marketservice.Service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Range;
 import org.springframework.data.redis.connection.stream.MapRecord;
@@ -19,24 +20,46 @@ public class ChatService {
     private RedisMessageListenerContainer container;
 
     @Autowired
-    private chatSubService chatSubService;
+    private chatSubListener chatSubListener;
 
-    public void sendMessage(String userId1, String userId2, String message) {
-        String chatRoomId = createChatRoomId(userId1, userId2);
+    @Autowired
+    private ObjectMapper objectMapper;
 
-        if (!chatRoomExists(chatRoomId)) {
+    String chatTopic = "chatHistory:users:";
+
+    public void sendMessage(String myId, String yourId, String message) {
+        String chatRoomId = createChatRoomId(myId, yourId);
+        String reverseId = createChatRoomId(yourId, myId);
+
+        if(chatRoomExists(reverseId))
+            chatRoomId = reverseId;
+
+        if (!chatRoomExists(chatRoomId))
             createChatRoom(chatRoomId);
-        }
 
         Map<String, String> messageMap = new HashMap<>();
-        messageMap.put("userId", userId1);
+        messageMap.put("userId", myId);
         messageMap.put("message", message);
 
-        redisTemplate.convertAndSend(chatRoomId, message);
-        redisTemplate.opsForStream().add(chatRoomId, messageMap);    }
+        try {
+            String messageMapJson = objectMapper.writeValueAsString(messageMap);
+            redisTemplate.convertAndSend(chatRoomId, messageMapJson);
+            redisTemplate.opsForStream().add(chatRoomId, messageMap);
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+    }
 
-    public List<MapRecord<String, Object, Object>> getChatHistory(String user1Id, String user2Id) {
-        String chatRoomId = createChatRoomId(user1Id, user2Id);
+    public List<MapRecord<String, Object, Object>> getChatHistory(String myId, String yourId) {
+        String chatRoomId = createChatRoomId(myId, yourId);
+        String reverseId = createChatRoomId(yourId, myId);
+
+        if(chatRoomExists(reverseId))
+            chatRoomId = reverseId;
+
+        if (!chatRoomExists(chatRoomId))
+            createChatRoom(chatRoomId);
+
         return redisTemplate.opsForStream().range(chatRoomId, Range.unbounded());
     }
     private boolean chatRoomExists(String chatRoomId) {
@@ -44,16 +67,13 @@ public class ChatService {
     }
 
     private void createChatRoom(String chatRoomId) {
-        // Redis 스트림 생성 (실제 데이터 저장 로직은 생략)
-
-        // 리스너 등록
-        container.addMessageListener(chatSubService, new PatternTopic(chatRoomId));
+        container.addMessageListener(chatSubListener, new PatternTopic(chatRoomId));
     }
 
     private String createChatRoomId(String userId1, String userId2) {
         List<String> userIds = Arrays.asList(userId1, userId2);
         Collections.sort(userIds);
-        return String.join("-", userIds);
+        return chatTopic+String.join(":", userIds);
     }
 }
 
