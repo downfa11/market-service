@@ -34,7 +34,8 @@ public class UserService {
             return DecryptMyDataMembership(membership);
 
         } else {
-            throw new RuntimeException("Invalid LoginRequest");
+            // throw new RuntimeException("Invalid LoginRequest");
+            return null;
         }
     }
 
@@ -61,41 +62,40 @@ public class UserService {
         return Mydata;
     }
 
-    public RegisterMembershipResponse RegisterMembership(RegisterMembershipRequest request){
-        if(repository.findByEmail(request.getEmail()).isPresent())
-            throw new RuntimeException("already exists email");
+    public messageEntity RegisterMembership(Long oauthId,String email,String nickname,RegisterMembershipRequest request){
+        if(repository.findByEmail(email).isPresent())
+            return new messageEntity("Fail","already exists email");
 
-        if (repository.findByNickname(request.getNickname()).isPresent())
-            throw new RuntimeException("already exists nickname");
+        if (repository.findByNickname(nickname).isPresent())
+            return new messageEntity("Fail","already exists nickname");
 
 
         try {
-
-            String name = request.getName();
-            String address = request.getAddress();
-            String email = request.getEmail();
+            String name = "아직 이름이 없어요.";
+            String address = "아직 주소가 없어요.";
             //String encryptedName = vaultAdapter.encrypt(name);
             //String encryptedAddress = vaultAdapter.encrypt(address);
             //String encryptedEmail = vaultAdapter.encrypt(email);
 
-            Membership membership = EncryptMembership(name,request.getNickname(),address,email,request.getRegion(),request.isValid());
+            Membership membership = EncryptMembership(oauthId,name,nickname,address,email,request.getRegion(),request.isValid());
             Long userid = membership.getMembershipId();
-            return new RegisterMembershipResponse(userid,
+            return new messageEntity("Success",new RegisterMembershipResponse(userid,
                     membership.getName(),
                     membership.getNickname(),
                     membership.getEmail(),
                     membership.getAddress(),
-                    membership.getRegion());
+                    membership.getRegion()));
         }
         catch (Exception e){
-            throw new RuntimeException("registerMembership error: "+e);
+            return new messageEntity("Fail","registerMembership error: "+e);
         }
     }
 
     @Transactional
-    public Membership EncryptMembership(String encryptedName,String nickname,String encryptedEmail,String encryptedAddress,String region,Boolean isValid){
+    public Membership EncryptMembership(Long oauthId,String encryptedName,String nickname,String encryptedEmail,String encryptedAddress,String region,Boolean isValid){
         Membership membership = Membership.builder()
-                .membershipId((long) UUID.randomUUID().hashCode())
+                //.membershipId((long) UUID.randomUUID().hashCode())
+                .membershipId(oauthId)
                 .name(encryptedName)
                 .nickname(nickname)
                 .email(encryptedEmail)
@@ -121,17 +121,16 @@ public class UserService {
             }
 
         }  catch(Exception e){
-                throw new RuntimeException("deleteMembership error: "+e); }
+            return false; }
         return false;
     }
-    public jwtToken LoginMembership(String email) {
+    public jwtToken LoginMembership(Long id) {
 
-        Optional<Membership> memberOptional = repository.findByEmail(email);
+        Optional<Membership> memberOptional = repository.findById(id);
         if(memberOptional.isPresent()){
             Membership membership = memberOptional.get();
 
             if(membership.isValid()){
-                Long id = membership.getMembershipId();
                 String jwt = jwtTokenProvider.generateJwtToken(id);
                 String refreshToken = jwtTokenProvider.generateRefreshToken(id);
                 membership.setRefreshToken(refreshToken);
@@ -143,9 +142,9 @@ public class UserService {
                         new jwtToken.MembershipRefreshToken(refreshToken)
                 );
             }
+            else return null;
         }
-
-        //register
+        //else register
         return null;
     }
 
@@ -172,7 +171,6 @@ public class UserService {
 
             }
         }
-
         return null;
     }
     public jwtToken refreshJwtToken(RefreshTokenRequest request) {
@@ -226,4 +224,8 @@ public class UserService {
         return null;
     }
 
+    public Membership findByMembershipId(Long membershipId){
+        Optional<Membership> membershipOptional = repository.findById(membershipId);
+        return membershipOptional.get();
+    }
 }

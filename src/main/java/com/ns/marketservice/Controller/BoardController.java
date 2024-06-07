@@ -1,10 +1,7 @@
 package com.ns.marketservice.Controller;
 
 import com.ns.marketservice.Domain.Board;
-import com.ns.marketservice.Domain.DTO.BoardFilter;
-import com.ns.marketservice.Domain.DTO.BoardResponse;
-import com.ns.marketservice.Domain.DTO.messageEntity;
-import com.ns.marketservice.Domain.DTO.postRequest;
+import com.ns.marketservice.Domain.DTO.*;
 import com.ns.marketservice.Service.BoardService;
 import com.ns.marketservice.Utils.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
@@ -34,7 +31,9 @@ public class BoardController {
     private final JwtTokenProvider jwtTokenProvider;
 
     @PostMapping("/add")
-    public ResponseEntity<messageEntity> add(@RequestBody postRequest request, @RequestPart(value = "images", required = false) List<MultipartFile> images) {
+    public ResponseEntity<messageEntity> add(@RequestPart(value = "request") postRequest request,
+                                             @RequestPart(value = "images", required = false) List<MultipartFile> images) {
+
         Long idx = jwtTokenProvider.getMembershipIdbyToken();
         if (idx == 0)
             return ResponseEntity.ok().body(new messageEntity("Fail","Not Authorization or boardId is incorrect."));
@@ -43,7 +42,7 @@ public class BoardController {
             return ResponseEntity.ok().body(new messageEntity("Fail","Image max size 3."));
 
         return ResponseEntity.ok()
-                .body(new messageEntity("Success",boardService.add(idx,request, images)));
+                .body(boardService.add(idx,request, images));
     }
 
     @PostMapping("/add/temp")
@@ -58,7 +57,7 @@ public class BoardController {
         temp.setPrice((long) random.nextInt(10000));
 
         return ResponseEntity.ok()
-                .body(new messageEntity("Success",boardService.add(idx,temp, null)));
+                .body(boardService.add(idx,temp, null));
     }
 
     @PatchMapping("/update")
@@ -72,7 +71,7 @@ public class BoardController {
             return ResponseEntity.ok().body(new messageEntity("Fail","Image max size 3."));
 
         return ResponseEntity.ok()
-                .body(new messageEntity("Success",boardService.updateBoard(boardId, request, images)));
+                .body(boardService.updateBoard(boardId, request, images));
 
     }
 
@@ -82,10 +81,8 @@ public class BoardController {
         if (idx == 0 || !boardService.validateBoard(idx,boardId))
             return ResponseEntity.ok().body(new messageEntity("Fail","Not Authorization or request is incorrect."));
 
-        boardService.deleteBoard(boardId);
-
         return ResponseEntity.ok()
-                .body(new messageEntity("Success",boardId));
+                .body(boardService.deleteBoard(boardId));
     }
 
     //저장된 이미지 조회
@@ -129,55 +126,23 @@ public class BoardController {
         }
     }
 
-    @GetMapping("/list")
-    public ResponseEntity<messageEntity> getBoards() {
-            List<BoardResponse> boards = boardService.getBoards();
-            List<BoardResponse> dayboard = new ArrayList<>();
-            Timestamp currentTimestamp = new Timestamp(System.currentTimeMillis());
-
-            for (BoardResponse board : boards) {
-                Timestamp boardTimestamp = board.getCreatedAt();
-                long timeDifference = currentTimestamp.getTime() - boardTimestamp.getTime();
-                long hoursDifference = TimeUnit.MILLISECONDS.toMinutes(timeDifference); // toMinutes->toHours
-
-                if (hoursDifference <= 1) //1 -> 24
-                    dayboard.add(board);
-
-            }
-
+    @GetMapping("/list/{offset}")
+    public ResponseEntity<messageEntity> getBoardsAll(@PathVariable Long offset, @RequestBody BoardFilter filter) {
         return ResponseEntity.ok()
-                .body(new messageEntity("Success",dayboard));
-    }
-    @GetMapping("/list/{CategoryName}/{lastboardId}")
-    public ResponseEntity<messageEntity> getBoardsByCategory(@PathVariable String CategoryName, @PathVariable Long lastboardId, @RequestBody BoardFilter filter) {
-        return ResponseEntity.ok()
-                .body(new messageEntity("Success",boardService.getBoardByCategory(CategoryName,lastboardId,filter)));
-    }
-
-    @GetMapping("/list/{lastboardId}")
-    public ResponseEntity<messageEntity> getBoardsAll(@PathVariable Long lastboardId, @RequestBody BoardFilter filter) {
-
-        return ResponseEntity.ok()
-                .body(new messageEntity("Success",boardService.getBoardsAll(lastboardId,filter)));
+                .body(boardService.getBoardsAll(offset,filter));
     }
 
 
-    @GetMapping("/myboard")
-    public ResponseEntity<messageEntity> getMyBoards () {
+    @GetMapping("/myboard/{offset}")
+    public ResponseEntity<messageEntity> getMyBoards (@PathVariable Long offset) {
         Long idx = jwtTokenProvider.getMembershipIdbyToken();
         if (idx == 0)
             return ResponseEntity.ok().body(new messageEntity("Fail","Not Authorization or request is incorrect."));
 
         return ResponseEntity.ok()
-                .body(new messageEntity("Success",boardService.getMyBoards(idx)));
+                .body(boardService.getMyBoards(idx,offset));
     }
 
-    @GetMapping("/board")
-    public ResponseEntity<messageEntity> getMembershipBoards (@RequestParam("memberId") Long idx) {
-        return ResponseEntity.ok()
-                .body(new messageEntity("Success",boardService.getMyBoards(idx)));
-
-    }
     @GetMapping("/{boardId}")
     public ResponseEntity<messageEntity> getBoardByBoardId (@PathVariable Long boardId){
         Long idx = jwtTokenProvider.getMembershipIdbyToken();
@@ -185,36 +150,36 @@ public class BoardController {
             return ResponseEntity.ok().body(new messageEntity("Fail","Not Authorization or request is incorrect."));
 
         return ResponseEntity.ok()
-                .body(new messageEntity("Success",boardService.getBoardByBoardId(boardId,idx)));
+                .body(boardService.getBoardByBoardId(boardId,idx));
 
     }
-    @GetMapping("/search/user/{lastboardId}")
-    public ResponseEntity<messageEntity> getBoardByUserId (@RequestParam("nickname") String nickname, @PathVariable Long lastboardId, @RequestBody BoardFilter filter){
+    @GetMapping("/search/user/{offset}")
+    public ResponseEntity<messageEntity> getBoardByUserId (@RequestParam("nickname") String nickname, @PathVariable Long offset, @RequestBody BoardFilter filter){
         if (nickname == null)
             return ResponseEntity.ok().body(new messageEntity("Fail","Search Keyword 'nickname' is null."));
 
         return ResponseEntity.ok()
-                .body(new messageEntity("Success",boardService.searchBoardByUserNickname(nickname,lastboardId,filter)));
+                .body(boardService.searchBoardByUserNickname(nickname,offset,filter));
 
     }
 
-    @GetMapping("/search/content/{lastboardId}")
-    public ResponseEntity<messageEntity> searchBoardByContent (@RequestParam("content") String content, @PathVariable Long lastboardId, @RequestBody BoardFilter filter){
+    @GetMapping("/search/content/{offset}")
+    public ResponseEntity<messageEntity> searchBoardByContent (@RequestParam("content") String content, @PathVariable Long offset, @RequestBody BoardFilter filter){
         if (content == null)
             return ResponseEntity.ok().body(new messageEntity("Fail","Search Keyword 'content' is null."));
 
         return ResponseEntity.ok()
-                .body(new messageEntity("Success",boardService.searchBoardByContent(content,lastboardId,filter)));
+                .body(boardService.searchBoardByContent(content,offset,filter));
 
     }
 
-    @GetMapping("/search/title/{lastboardId}")
-    public ResponseEntity<messageEntity> searchBoardByTitle (@RequestParam("title") String title, @PathVariable Long lastboardId, @RequestBody BoardFilter filter){
+    @GetMapping("/search/title/{offset}")
+    public ResponseEntity<messageEntity> searchBoardByTitle (@RequestParam("title") String title, @PathVariable Long offset, @RequestBody BoardFilter filter){
          if (title == null)
             return ResponseEntity.ok().body(new messageEntity("Fail","Search Keyword 'title' is null."));
 
         return ResponseEntity.ok()
-                .body(new messageEntity("Success",boardService.searchBoardByTitle(title,lastboardId,filter)));
+                .body(boardService.searchBoardByTitle(title,offset,filter));
 
 
     }
@@ -226,7 +191,7 @@ public class BoardController {
             return ResponseEntity.ok().body(new messageEntity("Fail","Not Authorization or request is incorrect."));
 
         return ResponseEntity.ok()
-                .body(new messageEntity("Success",boardService.setStatusSold(idx,boardId)));
+                .body(boardService.setStatusSold(idx,boardId));
 
 
 
@@ -240,7 +205,7 @@ public class BoardController {
             return ResponseEntity.ok().body(new messageEntity("Fail","Not Authorization or request is incorrect."));
 
         return ResponseEntity.ok()
-                .body(new messageEntity("Success",boardService.setStatusSale(idx,boardId)));
+                .body(boardService.setStatusSale(idx,boardId));
 
     }
 }

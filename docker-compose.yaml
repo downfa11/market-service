@@ -13,10 +13,10 @@ services:
       - "3306:3306"
     environment:
       - TZ=Asia/Seoul
-      - MYSQL_ROOT_PASSWORD=rootpassword
+      - MYSQL_ROOT_PASSWORD=
       - MYSQL_USER=mysqluser
       - MYSQL_PASSWORD=
-      - MYSQL_HOST=
+      - MYSQL_HOST=localhost
       - MYSQL_PORT=3306
       - MYSQL_DATABASE=market-service
 
@@ -31,7 +31,7 @@ services:
     environment:
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/market-service?useSSL=false&allowPublicKeyRetrieval=true
       - SPRING_DATASOURCE_USERNAME=mysqluser
-      - SPRING_DATASOURCE_PASSWORD=mysqlpw
+      - SPRING_DATASOURCE_PASSWORD=
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
       - SPRING_CLOUD_VAULT_TOKEN=
       - SPRING_CLOUD_VAULT_SCHEME=http
@@ -45,7 +45,7 @@ services:
       - EXPIRE_DEFAULTTIME=18000
       - KAKAO_CLIENT_ID=
       - KAKAO_CLIENT_SECRET=
-      - KAKAO_REDIRECT_URL=kakao/callback
+      - KAKAO_REDIRECT_URL=http://localhost/kakao/callback
       - NAVER_CLIENT_ID=
       - NAVER_CLIENT_SECRET=
       - NAVER_REDIRECT_URL=naver/callback

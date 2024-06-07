@@ -1,0 +1,27 @@
+server:
+  tomcat:
+    threads:
+      max: 500 # 가용 생성할 수 있는 thread의 총 개수
+      min-spare: 30 # Idle thread의 개수
+    max-connections: 8192 # connection의 총 개수
+    accept-count: 100 # 작업큐의 사이즈
+    connection-timeout: 10000 # 10초
+  port: 8080
+
+spring:
+  servlet:
+    multipart:
+      max-request-size: 10MB
+      max-file-size: 10MB
+
+cloud:
+  aws:
+    s3:
+      credentials:
+        accessKey:
+        secretKey: 
+      region:
+        static: ap-northeast-2
+    stack:
+      auto: false
+    bucket: market-service

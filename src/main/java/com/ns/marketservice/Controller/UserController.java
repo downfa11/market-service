@@ -1,5 +1,7 @@
 package com.ns.marketservice.Controller;
 
+import com.ns.marketservice.Auth.kakao.KakaoDTO;
+import com.ns.marketservice.Auth.kakao.KakaoService;
 import com.ns.marketservice.Domain.DTO.*;
 import com.ns.marketservice.Domain.Membership;
 import com.ns.marketservice.Utils.jwtToken;
@@ -25,21 +27,33 @@ import java.util.Arrays;
 public class UserController {
 
     private final UserService userService;
-    RestTemplate restTemplate = new RestTemplate();
+    private final KakaoService kakaoService;
 
-    @PostMapping(path="/register")
-    public ResponseEntity<messageEntity> registerMembership(@RequestBody RegisterMembershipRequest request){
-        return ResponseEntity.ok().body(new messageEntity("Success",userService.RegisterMembership(request)));
+    @PostMapping(path="/oauth/register")
+    public ResponseEntity<messageEntity> registerMembership(HttpServletRequest httpRequest,@RequestBody RegisterMembershipRequest request) throws Exception {
+        KakaoDTO kakaoInfo = kakaoService.getKakaoInfo(httpRequest.getParameter("code"));
+        Long id = kakaoInfo.getId();
+        String nickname = kakaoInfo.getNickname();
+        String email = kakaoInfo.getEmail();
+        if(kakaoInfo!=null)
+            return ResponseEntity.ok().body(userService.RegisterMembership(id,email,nickname,request));
+        else
+            return ResponseEntity.ok().body(new messageEntity("Fail","Incorrect OAuth2 autorization."));
+
     }
 
     @Transactional
     @PostMapping(path="/login-temp")
-    public ResponseEntity<messageEntity> loginMembershipTemp(@RequestBody LoginMembershipRequest request,HttpServletRequest httprequest,HttpServletResponse httpresponse){
+    public ResponseEntity<messageEntity> loginMembershipTemp(@RequestBody LoginMembershipRequest request){
         if(request.getMembershipId()==null)
             return ResponseEntity.ok().body(new messageEntity("Fail","Not Authorization or request is incorrect."));
 
         //WaitingQueueConnect("default", request.getMembershipId(),httprequest,httpresponse);
-        return ResponseEntity.ok().body(new messageEntity("Success",userService.LoginMembershipTemp(request)));
+        jwtToken token = userService.LoginMembershipTemp(request);
+        if(token==null)
+            return ResponseEntity.ok().body(new messageEntity("Success","Not Autorization Token."));
+        else
+            return ResponseEntity.ok().body(new messageEntity("Success",token));
     }
 
 
@@ -53,7 +67,10 @@ public class UserController {
         if(memberId==null)
             return ResponseEntity.ok().body(new messageEntity("Fail","Not Authorization or request is incorrect."));
 
-        return ResponseEntity.ok().body(new messageEntity("Success",userService.deleteByMembership(memberId)));
+        boolean canDelete = userService.deleteByMembership(memberId);
+        if(canDelete)
+            return ResponseEntity.ok().body(new messageEntity("Success",memberId));
+        else return ResponseEntity.ok().body(new messageEntity("Success","deleteMembership error: "));
     }
 
 
