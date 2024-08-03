@@ -25,7 +25,6 @@ lombok, thymeleaf, jjwt, swagger:2.0.2, json-simple:1.1.1, cloud-aws:2.2.6, Vaul
 - `@Numberic` 커스텀 어노테이션으로 sql injection을 대비하는 최소한의 시큐어 코딩</br>
 
 - aws S3를 이용해서 이미지나 파일을 첨부할 수 있는 게시판과 댓글 CRUD를 구현
-- 게시글의 좋아요 기능을 **Redis의 싱글 쓰레드를 활용**해서 동시성을 고려
 - 게시판 유형에 따라서 필터링[`SortStatus`, `region`, `category`]한 검색 결과를 목록으로 표시</br>
 
 - Redis의 `Caching`으로 게시글 목록이나 검색 결과, 게시물 내용 요청 작업 수행 속도 상승
